@@ -135,7 +135,7 @@ h2{font-family:var(--display);font-size:18px;margin:0;font-weight:700}
   </div>
 
   <section class="card hero">
-    <div class="pet" id="pet"></div>
+    <button class="pet" id="pet" aria-label="摸摸麻糬"></button>
     <div class="hstat">
       <div class="day" id="dayTxt"></div>
       <div class="segs" id="segs"></div>
@@ -201,6 +201,27 @@ h2{font-family:var(--display);font-size:18px;margin:0;font-weight:700}
 .edit{color:var(--ink)}
 .tactions{display:flex;gap:6px;flex:0 0 auto}
 [hidden]{display:none!important}
+/* living mochi: breathes, blinks, mood-specific idle, reacts to taps */
+#pet .squish,#pet .eyes,#pet .held,#pet .floaty{transform-box:view-box}
+#pet .squish{transform-origin:50px 90px;animation:breathe 3.2s ease-in-out infinite}
+#pet .eyes{transform-origin:50px 57px;animation:blink 4.6s infinite}
+#pet .held{transform-origin:86px 80px;animation:wave 2.4s ease-in-out infinite}
+#pet .floaty{animation:floaty 5s ease-in-out infinite}
+#pet[data-mood="happy"] .squish{animation:hop 1.8s ease-in-out infinite}
+#pet[data-mood="sad"] .squish{animation:sway 4.5s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.035,.965)}}
+@keyframes blink{0%,91%,97%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+@keyframes hop{0%,55%,100%{transform:translateY(0) scale(1,1)}65%{transform:translateY(0) scale(1.08,.9)}77%{transform:translateY(-9px) scale(.95,1.06)}88%{transform:translateY(0) scale(1.06,.94)}}
+@keyframes sway{0%,100%{transform:rotate(-2.5deg) scale(1,.99)}50%{transform:rotate(2.5deg) scale(1,1.01)}}
+@keyframes wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg)}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.pet{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pet.bounce .squish{animation:squeeze .6s ease!important}
+@keyframes squeeze{0%{transform:scale(1)}25%{transform:scale(1.15,.82)}55%{transform:translateY(-12px) scale(.92,1.1)}80%{transform:scale(1.04,.96)}100%{transform:scale(1)}}
+.pet.bounce svg{animation:none}
+.puff{position:absolute;left:50%;top:18%;pointer-events:none;font-size:18px;color:#F07C98;animation:puff 1s ease-out forwards}
+@keyframes puff{from{transform:translate(-50%,0) scale(.6);opacity:1}to{transform:translate(calc(-50% + var(--dx)),-46px) scale(1.2);opacity:0}}
+
 .shopHead{display:flex;align-items:center;gap:10px;width:100%;text-align:left}
 .shopHead h2{flex:0 0 auto}
 .shopHint{flex:1;min-width:0;font-size:12px;color:var(--muted);font-weight:700}
@@ -392,7 +413,7 @@ function toast(msg){
   const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);
   clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),1800);
 }
-function bounce(){const p=document.getElementById("pet");p.classList.remove("bounce");void p.offsetWidth;p.classList.add("bounce")}
+let bounceT;function bounce(){const p=document.getElementById("pet");p.classList.remove("bounce");void p.offsetWidth;p.classList.add("bounce");clearTimeout(bounceT);bounceT=setTimeout(()=>p.classList.remove("bounce"),650)}
 
 function uncomplete(id){
   const k=today(),i=(S.log[k]||[]).indexOf(id);
@@ -485,19 +506,22 @@ function normEq(){
 }
 function mochi(mood,eq,label){
   eq=eq||{};
+  const E=(d)=>'<g class="eyes">'+d+'</g>';
   const faces={
-    sad:'<path d="M32 58 Q37 54 42 58 M58 58 Q63 54 68 58" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/><path d="M44 72 Q50 67 56 72" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/>',
-    ok:'<circle cx="37" cy="57" r="3.6" fill="var(--face)"/><circle cx="63" cy="57" r="3.6" fill="var(--face)"/><path d="M45 69 L55 69" '+F+' stroke-width="3" stroke-linecap="round"/>',
-    happy:'<path d="M31 59 Q37 51 43 59 M57 59 Q63 51 69 59" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/><path d="M42 67 Q50 77 58 67 Z" fill="var(--face)"/><path d="M46 71 Q50 75 54 71" fill="#F07C98"/>'
+    sad:E('<path d="M32 58 Q37 54 42 58 M58 58 Q63 54 68 58" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/>')+'<path d="M44 72 Q50 67 56 72" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/>',
+    ok:E('<circle cx="37" cy="57" r="3.6" fill="var(--face)"/><circle cx="63" cy="57" r="3.6" fill="var(--face)"/>')+'<path d="M45 69 L55 69" '+F+' stroke-width="3" stroke-linecap="round"/>',
+    happy:E('<path d="M31 59 Q37 51 43 59 M57 59 Q63 51 69 59" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/>')+'<path d="M42 67 Q50 77 58 67 Z" fill="var(--face)"/><path d="M46 71 Q50 75 54 71" fill="#F07C98"/>'
   };
   const blush=mood==="sad"?.35:mood==="ok"?.6:1;
   const on=Object.values(eq).map(id=>ITEMS.find(x=>x.id===id)).filter(Boolean);
-  const back=on.filter(i=>i.back).sort((a,b)=>a.slot==="b"?-1:1).map(i=>acc(i.id)).join("");
-  const front=["s","f","h"].map(sl=>on.filter(i=>!i.back&&i.slot===sl).map(i=>acc(i.id)).join("")).join("");
-  return '<svg viewBox="0 0 100 100" aria-label="'+(label||"麻糬")+'">'+back
+  const bgL=on.filter(i=>i.slot==="b").map(i=>'<g class="floaty">'+acc(i.id)+'</g>').join("");
+  const ears=on.filter(i=>i.back&&i.slot!=="b").map(i=>acc(i.id)).join("");
+  const front=["f","h"].map(sl=>on.filter(i=>!i.back&&i.slot===sl).map(i=>acc(i.id)).join("")).join("");
+  const side=on.filter(i=>i.slot==="s").map(i=>'<g class="held">'+acc(i.id)+'</g>').join("");
+  return '<svg viewBox="0 0 100 100" aria-label="'+(label||"麻糬")+'">'+bgL+'<g class="squish">'+ears
    +'<path d="M12 70 C8 40 28 20 50 20 C72 20 92 40 88 70 C86 86 70 90 50 90 C30 90 14 86 12 70Z" fill="var(--mochi)" '+F+' stroke-width="3"/>'
    +'<ellipse cx="27" cy="66" rx="7" ry="4.5" fill="var(--cheek)" opacity="'+blush+'"/><ellipse cx="73" cy="66" rx="7" ry="4.5" fill="var(--cheek)" opacity="'+blush+'"/>'
-   +faces[mood]+front+'</svg>';
+   +faces[mood]+front+'</g>'+side+'</svg>';
 }
 
 /* ---------- render ---------- */
@@ -507,7 +531,7 @@ function render(){
   const now=new Date(),dow=(now.getDay()+6)%7,ws=weekStart(now);
   const done=S.tasks.filter(isComplete).length,tot=S.tasks.length;
   const mood=!tot||done===0?"sad":done<tot?"ok":"happy";
-  document.getElementById("pet").innerHTML=mochi(mood,S.eq);
+  const petEl=document.getElementById("pet");petEl.innerHTML=mochi(mood,S.eq);petEl.dataset.mood=mood;
   document.getElementById("dayTxt").innerHTML="第 <b>"+(dow+1)+"</b> / 7 天 · 已完成 <b>"+done+"/"+tot+"</b>";
   document.getElementById("segs").innerHTML=Array.from({length:7},(_,i)=>{
     const k=keyOf(addDays(ws,i));return '<i class="'+(i===dow?(active(k)?"on":"now"):active(k)&&i<dow?"on":"")+'"></i>'}).join("");
@@ -583,6 +607,12 @@ function renderCal(){
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
 /* ---------- events ---------- */
+const PETS={sad:["嗚…陪我做一件事好嗎","摸摸頭，好一點了","今天也想變厲害"],ok:["嘿嘿，好癢","繼續加油！","再一個就更開心了"],happy:["最喜歡你了！","今天超棒的","耶～全部完成！"]};
+document.getElementById("pet").addEventListener("click",()=>{
+  const el=document.getElementById("pet");bounce();
+  for(let i=0;i<3;i++){const h=document.createElement("span");h.className="puff";h.textContent="♥";h.style.setProperty("--dx",(i-1)*22+"px");h.style.animationDelay=i*.08+"s";el.appendChild(h);setTimeout(()=>h.remove(),1300)}
+  const m=el.dataset.mood||"ok",a=PETS[m];toast(a[Math.floor(Math.random()*a.length)]);
+});
 document.getElementById("list").addEventListener("click",e=>{
   const c=e.target.closest(".chk");if(c){toggle(c.dataset.id);return}
   const r=e.target.closest("[data-step]");if(r){step(r.dataset.step,1);return}
