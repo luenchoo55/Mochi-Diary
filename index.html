@@ -1,0 +1,653 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#F3F1E2"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>麻糬養成日記</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<style>
+/* Layout: one narrow phone column — a mochi pet card on top, then goal, calendar, task list, item shop. */
+:root{
+  --bg:#F3F1E2; --surface:#FFFDF5; --sunk:#E7E8CE; --ink:#3E4530; --muted:#888D70;
+  --accent:#87A055; --accent-ink:#FFFFFF; --mint:#B8C888; --butter:#E5C26B; --line:#DDDFC2;
+  --mochi:#FFFCF2; --cheek:#F2B4B4; --face:#3E4530; --shadow:0 6px 0 #D6D9B9;
+  --c1:#87A055; --c2:#B8C888; --c3:#6F987A; --c4:#E5C26B; --c5:#C4A07C;
+  --display:"Fredoka","Zen Maru Gothic","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+  --body:"Zen Maru Gothic","PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1C1F16; --surface:#272B1F; --sunk:#313626; --ink:#ECEEDC; --muted:#A6AC8F; --accent:#A9C076; --accent-ink:#1A1D13;
+  --mint:#93AC66; --butter:#E0BE68; --line:#3B4130; --mochi:#F3EEDD; --cheek:#E9A3A6; --face:#3A3F2C; --shadow:0 6px 0 #12140D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1F16; --surface:#272B1F; --sunk:#313626; --ink:#ECEEDC; --muted:#A6AC8F; --accent:#A9C076; --accent-ink:#1A1D13;
+  --mint:#93AC66; --butter:#E0BE68; --line:#3B4130; --mochi:#F3EEDD; --cheek:#E9A3A6; --face:#3A3F2C; --shadow:0 6px 0 #12140D; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:520px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.02em}
+.coins{display:flex;align-items:center;gap:6px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:4px 12px 4px 6px;font-family:var(--display);font-weight:600;font-variant-numeric:tabular-nums}
+.topr{display:flex;align-items:center;gap:8px}
+.themeBtn{display:flex;align-items:center;gap:6px;background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:5px 12px 5px 8px;font-size:13px;font-weight:700;color:var(--ink)}
+.themeBtn svg{width:18px;height:18px}
+.coin{width:22px;height:22px;border-radius:50%;background:var(--butter);box-shadow:inset 0 -3px 0 rgba(0,0,0,.12);display:grid;place-items:center;font-size:11px;font-weight:700;color:#7a5a10}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:26px;box-shadow:var(--shadow);padding:18px}
+.hero{display:flex;gap:16px;align-items:center}
+.pet{flex:0 0 112px;height:112px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;position:relative}
+.pet svg{width:104px;height:104px;overflow:visible}
+.pet.bounce svg{animation:bounce .6s ease}
+@keyframes bounce{30%{transform:translateY(-10px) scale(1.05,.95)}60%{transform:translateY(0) scale(.97,1.03)}}
+.hstat{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.day{font-family:var(--display);font-weight:600;font-size:17px;color:var(--muted)}
+.day b{color:var(--ink)}
+.segs{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.segs i{height:8px;border-radius:9px;background:var(--sunk)}
+.segs i.on{background:var(--mint)} .segs i.now{background:var(--accent)}
+.streak{font-size:13px;color:var(--accent);font-weight:700}
+.mood{font-size:13px;color:var(--muted)}
+.goal{display:flex;align-items:center;gap:10px;padding:12px 16px}
+.goal .lab{font-size:12px;letter-spacing:.08em;color:var(--muted);flex:0 0 auto}
+.goal input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--ink);font-weight:700}
+.goal input::placeholder{color:var(--muted);font-weight:500}
+.rowh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h2{font-family:var(--display);font-size:18px;margin:0;font-weight:700}
+.link{color:var(--accent);font-size:13px;font-weight:700}
+.btns{display:flex;gap:8px}
+.pill{border-radius:999px;padding:8px 16px;font-weight:700;font-size:14px;background:var(--sunk)}
+.pill.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 3px 0 rgba(0,0,0,.12)}
+.pill.on{outline:2px solid var(--accent)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tab{border-radius:999px;padding:9px 0;font-weight:700;font-size:14px;background:var(--surface);border:2px solid var(--line);color:var(--muted)}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:10px}
+.task{display:flex;align-items:center;gap:12px;background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:12px 14px}
+.task.done{background:var(--sunk)}
+.chk{flex:0 0 38px;height:38px;border-radius:50%;border:3px solid var(--tc);display:grid;place-items:center;transition:transform .15s}
+.chk:active{transform:scale(.9)}
+.task.done .chk{background:var(--tc)}
+.chk svg{width:20px;height:20px;opacity:0}
+.task.done .chk svg{opacity:1}
+.tinfo{flex:1;min-width:0}
+.tname{font-weight:700;overflow-wrap:anywhere}
+.task.done .tname{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:var(--tc)}
+.tmeta{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{font-size:11px;padding:1px 8px;border-radius:999px;background:var(--sunk);color:var(--muted);font-weight:700}
+.del{flex:0 0 auto;font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;background:var(--sunk);color:var(--accent)}
+.del.sure{background:var(--accent);color:var(--accent-ink)}
+.empty{text-align:center;color:var(--muted);padding:22px 10px;border:2px dashed var(--line);border-radius:20px;font-size:14px}
+.cal{display:flex;flex-direction:column;gap:10px}
+.calnav{display:flex;align-items:center;justify-content:space-between}
+.calnav button{width:34px;height:34px;border-radius:50%;background:var(--sunk);font-weight:700}
+.calnav span{font-family:var(--display);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;font-variant-numeric:tabular-nums}
+.grid .wd{font-size:11px;color:var(--muted);font-weight:700}
+.dd{aspect-ratio:1;max-width:100%;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;position:relative;background:transparent}
+.dd.l1{background:color-mix(in srgb,var(--mint) 35%,transparent)}
+.dd.l2{background:color-mix(in srgb,var(--mint) 65%,transparent)}
+.dd.l3{background:var(--mint);color:#2c331f}
+.dd.today{outline:2px solid var(--accent);outline-offset:-2px}
+.dd.sel{box-shadow:0 0 0 3px var(--ink)}
+.dd.out{opacity:0}
+.dayrec{background:var(--sunk);border-radius:16px;padding:10px 14px;font-size:14px}
+.dayrec ul{margin:6px 0 0;padding-left:18px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{background:var(--sunk);border-radius:16px;padding:10px 4px}
+.stats b{display:block;font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.stats span{font-size:11px;color:var(--muted);font-weight:700}
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.item{background:var(--sunk);border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.item{position:relative}
+.item .mini{width:76px;height:70px}
+.item .mini svg{width:100%;height:100%}
+.item.locked .mini{opacity:.85}
+.slotTag{position:absolute;top:8px;left:8px;font-size:10px;font-weight:700;color:var(--muted);background:var(--surface);border-radius:999px;padding:1px 7px}
+.shopTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.shopTabs button{flex:0 0 auto;padding:6px 14px;border-radius:999px;font-size:13px;font-weight:700;background:var(--sunk);color:var(--muted)}
+.shopTabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.item .nm{font-weight:700;font-size:14px}
+.item button{width:100%;border-radius:999px;padding:6px;font-size:13px;font-weight:700;background:var(--surface);border:2px solid var(--line)}
+.item button.eq{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.item button:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:12px;color:var(--muted);text-align:center}
+.sheetbg{position:fixed;inset:0;background:rgba(20,40,25,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--surface);width:100%;max-width:520px;border-radius:26px 26px 0 0;padding:20px max(18px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lab{font-size:13px;font-weight:700;color:var(--muted)}
+.field input[type=text],.field input[type=number]{border:2px solid var(--line);background:var(--bg);border-radius:14px;padding:10px 12px;font:inherit;color:var(--ink);width:100%}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{padding:9px;border-radius:14px;border:2px solid var(--line);font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.colors{display:flex;gap:10px}
+.colors button{width:32px;height:32px;border-radius:50%;background:var(--sw)}
+.colors button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;z-index:30;white-space:nowrap;animation:pop .25s ease}
+@keyframes pop{from{transform:translate(-50%,12px);opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">麻糬養成日記</div>
+    <div class="topr">
+      <button class="themeBtn" id="themeBtn" aria-label="切換日間或夜間模式"></button>
+      <div class="coins" aria-label="金幣"><span class="coin">$</span><span id="coinN">0</span></div>
+    </div>
+  </div>
+
+  <section class="card hero">
+    <div class="pet" id="pet"></div>
+    <div class="hstat">
+      <div class="day" id="dayTxt"></div>
+      <div class="segs" id="segs"></div>
+      <div class="streak" id="streakTxt"></div>
+      <div class="mood" id="moodTxt"></div>
+    </div>
+  </section>
+
+  <div class="card goal">
+    <span class="lab">養成目標</span>
+    <input id="goal" type="text" maxlength="40" placeholder="例如：成為能流利說日文的人（可不填）">
+  </div>
+
+  <section class="card cal">
+    <div class="rowh">
+      <h2>月曆</h2>
+      <button class="link" id="calToggle">查看每日紀錄 ›</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div id="calBody" hidden>
+      <div class="cal">
+        <div class="calnav"><button id="prevM" aria-label="上個月">‹</button><span id="monTxt"></span><button id="nextM" aria-label="下個月">›</button></div>
+        <div class="grid" id="calGrid"></div>
+        <div class="dayrec" id="dayRec"></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div class="rowh">
+      <h2>我的任務</h2>
+      <div class="btns"><button class="pill" id="manageBtn">管理任務</button><button class="pill primary" id="addBtn">＋ 新增任務</button></div>
+    </div>
+    <div class="tabs" role="group" aria-label="篩選">
+      <button class="tab" data-f="all" aria-pressed="true">全部顯示</button>
+      <button class="tab" data-f="daily" aria-pressed="false">每日任務</button>
+      <button class="tab" data-f="weekly" aria-pressed="false">每週任務</button>
+    </div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <section class="card" style="display:flex;flex-direction:column;gap:12px">
+    <button class="shopHead" id="shopToggle" aria-expanded="true" aria-controls="shopBody"><h2>道具屋</h2><span class="shopHint" id="shopHint"></span><span class="caret" aria-hidden="true">⌃</span></button>
+    <div id="shopBody" style="display:flex;flex-direction:column;gap:12px">
+      <span class="note" style="text-align:left">完成任務 +5、全部完成 +10、達成里程碑再加碼</span>
+      <div class="shopTabs" id="shopTabs" role="group" aria-label="道具分類"><button data-s="all">全部</button><button data-s="h">頭頂</button><button data-s="f">臉部</button><button data-s="s">身邊</button><button data-s="b">背景</button><button data-s="mine">我的</button></div>
+      <div class="shop" id="shop"></div>
+    </div>
+  </section>
+  <p class="note" id="saveNote">紀錄會自動保存</p>
+</div>
+
+<style>
+.ring{flex:0 0 42px;height:42px;border-radius:50%;background:conic-gradient(var(--tc) calc(var(--p) * 1turn),var(--line) 0);display:grid;place-items:center;transition:transform .15s}
+.ring:active{transform:scale(.9)}
+.ring span{width:32px;height:32px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+.task.done .ring span{background:var(--tc);color:#fff;font-size:15px}
+.pips{display:flex;gap:4px;margin:5px 0 3px}
+.pips i{flex:1;max-width:30px;height:7px;border-radius:7px;background:var(--line)}
+.pips i.on{background:var(--tc)}
+.minus,.edit{flex:0 0 auto;font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.task.done .minus{background:var(--surface)}
+.edit{color:var(--ink)}
+.tactions{display:flex;gap:6px;flex:0 0 auto}
+[hidden]{display:none!important}
+.shopHead{display:flex;align-items:center;gap:10px;width:100%;text-align:left}
+.shopHead h2{flex:0 0 auto}
+.shopHint{flex:1;min-width:0;font-size:12px;color:var(--muted);font-weight:700}
+.caret{flex:0 0 30px;height:30px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-weight:700;transition:transform .2s;line-height:1;padding-top:6px}
+.shopHead[aria-expanded="false"] .caret{transform:rotate(180deg);padding-top:0;padding-bottom:6px}
+</style>
+
+<div class="sheetbg" id="sheetBg" hidden>
+  <form class="sheet" id="sheet">
+    <h2 id="sheetTitle">新增任務</h2>
+    <div class="field"><label for="fName">任務名稱</label><input id="fName" type="text" maxlength="30" required placeholder="例如：背 20 個單字"></div>
+    <div class="field"><span class="lab">類型</span>
+      <div class="seg" id="typeSeg"><button type="button" data-t="daily" aria-pressed="true">每日任務</button><button type="button" data-t="weekly" aria-pressed="false">每週任務</button></div>
+    </div>
+    <div class="field"><span class="lab">完成方式</span>
+      <div class="seg" id="modeSeg"><button type="button" data-m="once" aria-pressed="true">一次完成</button><button type="button" data-m="steps" aria-pressed="false">分次完成</button></div>
+    </div>
+    <div class="two" id="stepFields" hidden>
+      <div class="field"><label for="fSteps">一天分幾次</label><input id="fSteps" type="number" min="2" max="20" value="5"></div>
+      <div class="field"><label for="fUnit">每次份量（可不填）</label><input id="fUnit" type="text" maxlength="12" placeholder="例如：500ml"></div>
+    </div>
+    <div class="two">
+      <div class="field"><label for="fMins">每次花幾分鐘</label><input id="fMins" type="number" min="1" max="600" value="20"></div>
+      <div class="field" id="targetField" hidden><label for="fTarget">每週幾次</label><input id="fTarget" type="number" min="1" max="7" value="3"></div>
+    </div>
+    <div class="field"><span class="lab">顏色</span><div class="colors" id="fColors"></div></div>
+    <div class="btns" style="justify-content:flex-end"><button type="button" class="pill" id="cancelBtn">取消</button><button type="submit" class="pill primary" id="submitBtn">加入任務</button></div>
+  </form>
+</div>
+
+<script>
+/* day / night toggle — defaults to day, remembered in this browser */
+let theme="light";
+try{theme=localStorage.getItem("mochi-theme")||"light"}catch(e){}
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5" fill="var(--butter)"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="var(--butter)" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>';
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme",theme);
+  const b=document.getElementById("themeBtn");
+  b.innerHTML=theme==="light"?SUN+"日間":MOON+"夜間";
+}
+document.getElementById("themeBtn").onclick=()=>{theme=theme==="light"?"dark":"light";try{localStorage.setItem("mochi-theme",theme)}catch(e){}applyTheme()};
+applyTheme();
+
+/* collapsible item shop, remembered in this browser */
+let shopOpen=true;
+try{shopOpen=localStorage.getItem("mochi-shop")!=="closed"}catch(e){}
+function applyShop(){
+  document.getElementById("shopBody").hidden=!shopOpen;
+  document.getElementById("shopToggle").setAttribute("aria-expanded",shopOpen);
+}
+document.getElementById("shopToggle").onclick=()=>{shopOpen=!shopOpen;try{localStorage.setItem("mochi-shop",shopOpen?"open":"closed")}catch(e){}applyShop()};
+applyShop();
+
+const COLORS=["--c1","--c2","--c3","--c4","--c5"];
+const MILESTONES=[1,3,7,14,30,60,100,200,365];
+/* items: slot h=頭頂 f=臉部 s=身邊 b=背景; back:true draws behind the mochi */
+const SLOTS={h:"頭頂",f:"臉部",s:"身邊",b:"背景"};
+const ITEMS=[
+  {id:"bow",name:"粉紅蝴蝶結",price:30,slot:"h"},
+  {id:"leaf",name:"小嫩芽",price:40,slot:"h"},
+  {id:"cherry",name:"雙子櫻桃",price:45,slot:"h"},
+  {id:"sakura",name:"櫻花髮夾",price:50,slot:"h"},
+  {id:"flower",name:"小雛菊",price:60,slot:"h"},
+  {id:"catEars",name:"貓耳朵",price:80,slot:"h",back:true},
+  {id:"bearEars",name:"小熊耳朵",price:80,slot:"h",back:true},
+  {id:"bunny",name:"兔兔耳朵",price:90,slot:"h",back:true},
+  {id:"hat",name:"小草帽",price:90,slot:"h"},
+  {id:"beanie",name:"毛線帽",price:100,slot:"h"},
+  {id:"party",name:"派對帽",price:110,slot:"h"},
+  {id:"chef",name:"廚師帽",price:130,slot:"h"},
+  {id:"headphones",name:"大耳機",price:150,slot:"h"},
+  {id:"witch",name:"魔女帽",price:180,slot:"h"},
+  {id:"crown",name:"金色王冠",price:200,slot:"h"},
+  {id:"halo",name:"天使光環",price:300,slot:"h"},
+  {id:"whiskers",name:"貓鬍鬚",price:35,slot:"f"},
+  {id:"heartBlush",name:"愛心腮紅",price:55,slot:"f"},
+  {id:"starSticker",name:"星星貼紙",price:60,slot:"f"},
+  {id:"glasses",name:"圓圓眼鏡",price:120,slot:"f"},
+  {id:"sunglasses",name:"酷酷墨鏡",price:140,slot:"f"},
+  {id:"monocle",name:"紳士單眼鏡",price:220,slot:"f"},
+  {id:"pencil",name:"小鉛筆",price:40,slot:"s"},
+  {id:"lollipop",name:"棒棒糖",price:50,slot:"s"},
+  {id:"book",name:"小書本",price:60,slot:"s"},
+  {id:"dango",name:"三色糰子",price:70,slot:"s"},
+  {id:"tulip",name:"鬱金香",price:80,slot:"s"},
+  {id:"matchaCup",name:"抹茶拿鐵",price:100,slot:"s"},
+  {id:"balloon",name:"小氣球",price:110,slot:"s"},
+  {id:"dumbbell",name:"迷你啞鈴",price:150,slot:"s"},
+  {id:"umbrella",name:"小雨傘",price:160,slot:"s"},
+  {id:"bubbles",name:"泡泡",price:90,slot:"b",back:true},
+  {id:"hearts",name:"愛心泡泡",price:120,slot:"b",back:true},
+  {id:"sparkles",name:"閃閃星光",price:160,slot:"b",back:true},
+  {id:"moon",name:"月亮與星星",price:250,slot:"b",back:true},
+  {id:"rainbow",name:"彩虹",price:500,slot:"b",back:true}
+];
+const pad=n=>String(n).padStart(2,"0");
+const keyOf=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseKey=k=>{const[a,b,c]=k.split("-").map(Number);return new Date(a,b-1,c)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const w=(x.getDay()+6)%7;return addDays(x,-w)};
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+function defaults(){
+  const t=new Date(), log={};
+  // Example history for the past few days so the calendar has something to show
+  [[-3,["e1","e2"]],[-2,["e1","e3"]],[-1,["e1","e2"]]].forEach(([o,ids])=>log[keyOf(addDays(t,o))]=ids);
+  return {v:1,goal:"",coins:25,owned:[],equipped:null,bonus:{},claimed:[],log,
+    tasks:[
+      {id:"e1",name:"讀書 30 分鐘",type:"daily",mins:30,color:0,ex:true},
+      {id:"e2",name:"喝水 2500ml",type:"daily",mins:2,steps:5,unit:"500ml",color:2,ex:true},
+      {id:"e3",name:"運動流汗",type:"weekly",mins:40,target:3,color:1,ex:true}
+    ]};
+}
+let S=null;
+try{const raw=localStorage.getItem("mochi-state");if(raw)S=JSON.parse(raw)}catch(e){}
+if(!S||!S.tasks)S=defaults();
+
+let shopSlot="all",filter="all",manage=false,calOpen=false,calMonth=new Date(),selDay=keyOf(new Date()),sheetType="daily",sheetMode="once",sheetColor=0,armedDel=null,editingId=null;
+
+/* ---------- persistence: private db doc per person, with browser storage as backup ---------- */
+let dbRef=null,saveTimer=null;
+function save(){
+  try{localStorage.setItem("mochi-state",JSON.stringify(S))}catch(e){}
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{
+    if(!dbRef)return;
+    try{await dbRef.set({json:JSON.stringify(S),updated:Date.now()});setNote("已同步到你的帳號")}
+    catch(e){setNote("已存在這個瀏覽器")}
+  },600);
+}
+function setNote(t){document.getElementById("saveNote").textContent=t}
+(async()=>{
+  try{
+    const c=window.claude; if(!c||!c.use){setNote("紀錄存在這個瀏覽器");return}
+    const [db,user]=await Promise.all([c.use("db"),c.use("user")]);
+    if(!db||!user){setNote("紀錄存在這個瀏覽器");return}
+    const id=await user.id(); if(!id){setNote("紀錄存在這個瀏覽器");return}
+    const ref=db.collection("data/users/"+id).doc("state");
+    const snap=await ref.get();
+    dbRef=ref;
+    if(snap.exists){const d=snap.data();if(d&&d.json){try{S=JSON.parse(d.json);render()}catch(e){}}setNote("已同步到你的帳號")}
+    else save();
+  }catch(e){setNote("紀錄存在這個瀏覽器")}
+})();
+
+/* ---------- logic ---------- */
+const today=()=>keyOf(new Date());
+const doneOn=(k,id)=>(S.log[k]||[]).includes(id);
+function weekCount(task,ref=new Date()){
+  const ws=weekStart(ref);let n=0;
+  for(let i=0;i<7;i++){if(doneOn(keyOf(addDays(ws,i)),task.id))n++}
+  return n;
+}
+function isComplete(task){return task.type==="daily"?doneOn(today(),task.id):weekCount(task)>=(task.target||1)}
+const active=k=>(S.log[k]||[]).length>0;
+function streak(){
+  let d=new Date(),n=0;
+  if(!active(keyOf(d)))d=addDays(d,-1);
+  while(active(keyOf(d))){n++;d=addDays(d,-1)}
+  return n;
+}
+/* staged tasks: progress per day lives in S.prog[date][taskId]; a task counts as done once all stages are in */
+const isStaged=t=>t.steps>1;
+const rawProg=(k,id)=>(S.prog&&S.prog[k]&&S.prog[k][id])||0;
+function progOf(t,k){return doneOn(k,t.id)?t.steps:Math.min(rawProg(k,t.id),t.steps-1)}
+function setProg(k,id,n){
+  S.prog=S.prog||{};S.prog[k]=S.prog[k]||{};
+  if(n>0)S.prog[k][id]=n;else{delete S.prog[k][id];if(!Object.keys(S.prog[k]).length)delete S.prog[k]}
+}
+function amountTxt(t,n){
+  const m=/^(\d+(?:\.\d+)?)\s*(.*)$/.exec((t.unit||"").trim());
+  if(m){const v=+m[1];return (+(v*n).toFixed(2))+m[2]+" / "+(+(v*t.steps).toFixed(2))+m[2]}
+  return n+" / "+t.steps+" 次"+(t.unit?"（每次 "+t.unit+"）":"");
+}
+function totalMins(task){
+  let m=0;
+  if(isStaged(task)){
+    const days=new Set([...Object.keys(S.log).filter(k=>S.log[k].includes(task.id)),...Object.keys(S.prog||{})]);
+    days.forEach(k=>m+=progOf(task,k)*(task.mins||0));
+  }else for(const k in S.log)if(S.log[k].includes(task.id))m+=task.mins||0;
+  return m;
+}
+const fmtH=m=>m<60?m+" 分鐘":(m/60).toFixed(m%60?1:0)+" 小時";
+
+let toastT;
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(x=>x.remove());
+  const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);
+  clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),1800);
+}
+function bounce(){const p=document.getElementById("pet");p.classList.remove("bounce");void p.offsetWidth;p.classList.add("bounce")}
+
+function uncomplete(id){
+  const k=today(),i=(S.log[k]||[]).indexOf(id);
+  if(i<0)return;
+  S.log[k].splice(i,1);S.coins=Math.max(0,S.coins-5);if(!S.log[k].length)delete S.log[k];
+}
+function step(id,delta){
+  const t=S.tasks.find(x=>x.id===id);if(!t)return;
+  const k=today(),n=progOf(t,k);
+  if(delta>0){
+    if(n>=t.steps){toast("今天已經全部完成囉");return}
+    setProg(k,id,n+1);
+    if(n+1>=t.steps){complete(id,"「"+t.name+"」完成！")}
+    else{toast("第 "+(n+1)+" 次 ✓ 還差 "+(t.steps-n-1)+" 次");bounce()}
+  }else{
+    if(n<=0)return;
+    if(n>=t.steps)uncomplete(id);
+    setProg(k,id,n-1);
+  }
+  save();render();
+}
+function toggle(id){
+  if(doneOn(today(),id))uncomplete(id);else complete(id);
+  save();render();
+}
+function complete(id,prefix){
+  const k=today();S.log[k]=S.log[k]||[];
+  {
+    S.log[k].push(id);S.coins+=5;let msg=(prefix||"")+"+5 金幣";
+    const all=S.tasks.length&&S.tasks.every(isComplete);
+    if(all&&!S.bonus[k]){S.bonus[k]=1;S.coins+=10;msg="今天全部完成！+15 金幣"}
+    const st=streak();
+    MILESTONES.forEach((m,idx)=>{if(st>=m&&!S.claimed.includes(m)){S.claimed.push(m);const r=10*(idx+1);S.coins+=r;msg="連續 "+m+" 天里程碑！再 +"+r+" 金幣"}});
+    toast(msg);bounce();
+  }
+}
+
+/* ---------- mochi drawing ---------- */
+const F='stroke="var(--face)"';
+function star(cx,cy,r,fill){
+  const p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;p.push((cx+rr*Math.cos(a)).toFixed(1)+","+(cy+rr*Math.sin(a)).toFixed(1))}
+  return '<polygon points="'+p.join(" ")+'" fill="'+fill+'" '+F+' stroke-width="1.5" stroke-linejoin="round"/>';
+}
+function heart(cx,cy,s,fill){return '<path transform="translate('+cx+' '+cy+') scale('+s+')" d="M0 4 C-7 -2 -4 -8 0 -4 C4 -8 7 -2 0 4Z" fill="'+fill+'" '+F+' stroke-width="'+(1.5/s).toFixed(2)+'" stroke-linejoin="round"/>'}
+function petals(cx,cy,r,fill,center){return '<g transform="translate('+cx+' '+cy+')">'+[0,72,144,216,288].map(a=>'<ellipse rx="'+(r*.6)+'" ry="'+r+'" transform="rotate('+a+') translate(0 -'+r+')" fill="'+fill+'" '+F+' stroke-width="2"/>').join("")+'<circle r="'+(r*.6)+'" fill="'+center+'" '+F+' stroke-width="2"/></g>'}
+function acc(id){
+  switch(id){
+    case"bow":return'<g transform="translate(70 18)"><path d="M0 0 L-16 -9 L-16 9 Z M0 0 L16 -9 L16 9 Z" fill="#F07C98" '+F+' stroke-width="2.5" stroke-linejoin="round"/><circle r="4.5" fill="#F07C98" '+F+' stroke-width="2.5"/></g>';
+    case"leaf":return'<g transform="translate(50 12)"><path d="M0 8 C0 0 0 -4 0 -6" '+F+' stroke-width="2.5" fill="none"/><path d="M0 -4 C-12 -14 -18 -4 -12 0 C-8 2 -3 0 0 -4Z" fill="#8CCB8A" '+F+' stroke-width="2.5"/><path d="M0 -6 C10 -16 18 -8 13 -3 C9 0 3 -1 0 -6Z" fill="#8CCB8A" '+F+' stroke-width="2.5"/></g>';
+    case"flower":return petals(28,22,8,"#fff","#F3C34A");
+    case"sakura":return petals(74,30,6,"#F9C3D2","#F07C98");
+    case"cherry":return'<path d="M54 2 Q47 7 46 13 M54 2 Q61 7 62 13" '+F+' stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M54 2 Q62 -4 68 1 Q61 6 54 2Z" fill="#8CCB8A" '+F+' stroke-width="2"/><circle cx="46" cy="17" r="6.5" fill="#E5484D" '+F+' stroke-width="2.5"/><circle cx="62" cy="17" r="6.5" fill="#E5484D" '+F+' stroke-width="2.5"/><circle cx="44" cy="15" r="1.8" fill="#fff"/><circle cx="60" cy="15" r="1.8" fill="#fff"/>';
+    case"catEars":return'<path d="M18 46 L20 10 L46 24Z M82 46 L80 10 L54 24Z" fill="var(--mochi)" '+F+' stroke-width="3" stroke-linejoin="round"/><path d="M24 34 L25 18 L36 25Z M76 34 L75 18 L64 25Z" fill="var(--cheek)"/>';
+    case"bearEars":return'<circle cx="24" cy="28" r="12" fill="#C69A6D" '+F+' stroke-width="3"/><circle cx="76" cy="28" r="12" fill="#C69A6D" '+F+' stroke-width="3"/><circle cx="24" cy="28" r="6" fill="#EBCDA8"/><circle cx="76" cy="28" r="6" fill="#EBCDA8"/>';
+    case"bunny":return'<g '+F+' stroke-width="3"><ellipse cx="35" cy="4" rx="8" ry="22" transform="rotate(-14 35 4)" fill="var(--mochi)"/><ellipse cx="65" cy="4" rx="8" ry="22" transform="rotate(14 65 4)" fill="var(--mochi)"/></g><ellipse cx="35" cy="5" rx="3.5" ry="14" transform="rotate(-14 35 5)" fill="var(--cheek)"/><ellipse cx="65" cy="5" rx="3.5" ry="14" transform="rotate(14 65 5)" fill="var(--cheek)"/>';
+    case"hat":return'<g transform="translate(50 18)"><ellipse rx="40" ry="9" fill="#EBC77E" '+F+' stroke-width="2.5"/><path d="M-22 0 C-22 -22 22 -22 22 0Z" fill="#EBC77E" '+F+' stroke-width="2.5"/><path d="M-21 -5 L21 -5" stroke="#E8728C" stroke-width="5"/></g>';
+    case"beanie":return'<path d="M20 40 C18 8 82 8 80 40Z" fill="#E8728C" '+F+' stroke-width="2.5"/><path d="M36 14 L36 36 M50 11 L50 36 M64 14 L64 36" stroke="#D45A75" stroke-width="2"/><rect x="16" y="33" width="68" height="11" rx="5.5" fill="#F7B3C2" '+F+' stroke-width="2.5"/><circle cx="50" cy="8" r="7" fill="#fff" '+F+' stroke-width="2.5"/>';
+    case"party":return'<g transform="rotate(12 56 24)"><path d="M42 26 L54 -6 L66 26Z" fill="#8EA6E8" '+F+' stroke-width="2.5" stroke-linejoin="round"/><path d="M46 16 L62 16 M49 8 L59 8" stroke="#F3C34A" stroke-width="3"/><circle cx="54" cy="-7" r="4.5" fill="#F07C98" '+F+' stroke-width="2"/></g>';
+    case"chef":return'<path d="M30 30 C14 30 16 6 32 10 C34 -4 56 -6 58 6 C70 -2 88 10 72 26 L70 30Z" fill="#fff" '+F+' stroke-width="2.5" stroke-linejoin="round"/><rect x="29" y="24" width="42" height="11" rx="2" fill="#fff" '+F+' stroke-width="2.5"/>';
+    case"headphones":return'<path d="M14 58 C12 6 88 6 86 58" stroke="#6F7A5C" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="4" y="48" width="15" height="24" rx="7" fill="#E8728C" '+F+' stroke-width="2.5"/><rect x="81" y="48" width="15" height="24" rx="7" fill="#E8728C" '+F+' stroke-width="2.5"/>';
+    case"witch":return'<path d="M34 28 L62 -14 Q60 4 70 28Z" fill="#6E5A92" '+F+' stroke-width="2.5" stroke-linejoin="round"/><ellipse cx="50" cy="28" rx="36" ry="7" fill="#6E5A92" '+F+' stroke-width="2.5"/><path d="M36 22 L68 22" stroke="#F3C34A" stroke-width="4"/>'+star(62,10,4,"#F3C34A");
+    case"crown":return'<g transform="translate(50 12)"><path d="M-18 8 L-20 -10 L-9 -1 L0 -14 L9 -1 L20 -10 L18 8 Z" fill="#F3C34A" '+F+' stroke-width="2.5" stroke-linejoin="round"/><circle cy="1" r="3" fill="#E8728C"/></g>';
+    case"halo":return'<ellipse cx="50" cy="6" rx="22" ry="6" fill="none" stroke="#F3C34A" stroke-width="5"/><ellipse cx="50" cy="6" rx="22" ry="6" fill="none" stroke="#FFF2B8" stroke-width="1.5"/>';
+    case"glasses":return'<g fill="none" '+F+' stroke-width="2.5"><circle cx="36" cy="56" r="11"/><circle cx="64" cy="56" r="11"/><path d="M47 55 Q50 52 53 55"/></g>';
+    case"sunglasses":return'<path d="M23 50 H47 V55 Q46 66 35 66 Q24 66 23 55Z M53 50 H77 V55 Q76 66 65 66 Q54 66 53 55Z" fill="#2E302A" '+F+' stroke-width="2" stroke-linejoin="round"/><path d="M47 52 Q50 49 53 52" '+F+' stroke-width="2.5" fill="none"/><path d="M28 54 L33 54 M58 54 L63 54" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>';
+    case"heartBlush":return heart(27,66,1.5,"#F07C98")+heart(73,66,1.5,"#F07C98");
+    case"whiskers":return'<path d="M8 62 L22 64 M8 70 L22 68 M92 62 L78 64 M92 70 L78 68" '+F+' stroke-width="2" stroke-linecap="round"/>';
+    case"monocle":return'<circle cx="63" cy="57" r="10" fill="rgba(255,255,255,.25)" stroke="#C9A24A" stroke-width="3"/><path d="M68 66 Q76 80 84 82" stroke="#C9A24A" stroke-width="1.5" fill="none"/>';
+    case"starSticker":return star(76,72,7,"#F3C34A");
+    case"balloon":return'<path d="M84 76 Q94 62 92 40" '+F+' stroke-width="1.5" fill="none"/><ellipse cx="92" cy="26" rx="11" ry="13" fill="#E8728C" '+F+' stroke-width="2.5"/><path d="M90 39 L94 39 L92 43Z" fill="#E8728C" '+F+' stroke-width="1.5"/><ellipse cx="88" cy="21" rx="3" ry="4" fill="#fff" opacity=".6"/>';
+    case"matchaCup":return'<path d="M80 92 Q94 96 106 92" '+F+' stroke-width="2" fill="none"/><path d="M82 76 H104 L101 92 H85Z" fill="#fff" '+F+' stroke-width="2.5" stroke-linejoin="round"/><ellipse cx="93" cy="76" rx="11" ry="3.5" fill="#87A055" '+F+' stroke-width="2"/><path d="M89 70 Q87 66 89 62 M96 70 Q94 66 96 62" stroke="var(--muted)" stroke-width="1.8" fill="none" stroke-linecap="round"/>';
+    case"dango":return'<path d="M82 98 L100 50" stroke="#C69A6D" stroke-width="3" stroke-linecap="round"/><circle cx="97" cy="58" r="6.5" fill="#F7B3C8" '+F+' stroke-width="2.5"/><circle cx="92.5" cy="70" r="6.5" fill="#FFF7EE" '+F+' stroke-width="2.5"/><circle cx="88" cy="82" r="6.5" fill="#A3C77A" '+F+' stroke-width="2.5"/>';
+    case"book":return'<g transform="rotate(-12 12 82)"><rect x="0" y="72" width="24" height="19" rx="2" fill="#8EA6E8" '+F+' stroke-width="2.5"/><path d="M4 72 V91" '+F+' stroke-width="2"/><rect x="9" y="77" width="11" height="4" rx="1" fill="#fff"/></g>';
+    case"tulip":return'<path d="M92 98 Q89 82 92 62" stroke="#6F987A" stroke-width="3" fill="none"/><path d="M91 88 Q82 80 84 72 Q92 78 91 88Z" fill="#8CCB8A" '+F+' stroke-width="1.8"/><path d="M83 50 Q84 64 92 64 Q100 64 101 50 L96 55 L92 48 L88 55Z" fill="#F07C98" '+F+' stroke-width="2.2" stroke-linejoin="round"/>';
+    case"lollipop":return'<rect x="89.5" y="62" width="4" height="34" rx="2" fill="#fff" '+F+' stroke-width="1.5"/><circle cx="92" cy="52" r="12" fill="#F7B3C8" '+F+' stroke-width="2.5"/><path d="M92 52 m-1 0 a2 2 0 1 1 3 1 a5 5 0 1 1 -8 -3 a8 8 0 1 1 12 5" stroke="#E8728C" stroke-width="2" fill="none"/>';
+    case"umbrella":return'<path d="M92 40 V86 Q92 92 86 92 Q81 92 81 87" '+F+' stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M70 42 Q92 10 114 42 Q108 37 103 42 Q97 37 92 42 Q87 37 81 42 Q76 37 70 42Z" fill="#8EA6E8" '+F+' stroke-width="2.5" stroke-linejoin="round"/>';
+    case"dumbbell":return'<rect x="78" y="85" width="26" height="4" rx="2" fill="#9A9A8C" '+F+' stroke-width="1.5"/><rect x="73" y="78" width="8" height="18" rx="2.5" fill="#6F987A" '+F+' stroke-width="2.2"/><rect x="101" y="78" width="8" height="18" rx="2.5" fill="#6F987A" '+F+' stroke-width="2.2"/>';
+    case"pencil":return'<g transform="rotate(30 92 74)"><rect x="88" y="54" width="8" height="32" fill="#F3C34A" '+F+' stroke-width="2"/><path d="M88 86 L96 86 L92 95Z" fill="#F2D4A8" '+F+' stroke-width="2" stroke-linejoin="round"/><rect x="88" y="49" width="8" height="6" rx="1.5" fill="#F07C98" '+F+' stroke-width="2"/></g>';
+    case"sparkles":return star(8,26,7,"#F3C34A")+star(94,18,6,"#F3C34A")+star(2,64,4.5,"#FFE08A")+star(100,58,5,"#FFE08A");
+    case"hearts":return heart(8,32,1.6,"#F07C98")+heart(94,20,1.3,"#F7B3C8")+heart(100,52,1.1,"#F07C98")+heart(2,64,1,"#F7B3C8");
+    case"rainbow":return[["#F07C98",54],["#F3C34A",47],["#A3C77A",40],["#8EA6E8",33]].map(([c,r])=>'<path d="M'+(50-r)+' 74 A'+r+' '+r+' 0 0 1 '+(50+r)+' 74" stroke="'+c+'" stroke-width="7" fill="none"/>').join("");
+    case"moon":return'<path d="M12 8 A14 14 0 1 0 24 30 A11 11 0 1 1 12 8Z" fill="#F3C34A" '+F+' stroke-width="2"/>'+star(94,14,5,"#FFE08A")+star(100,44,3.5,"#FFE08A")+star(4,58,3.5,"#FFE08A");
+    case"bubbles":return[[6,38,7],[94,18,9],[100,50,5],[3,70,4.5],[86,0,4]].map(([x,y,r])=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="rgba(142,197,232,.28)" stroke="#7FB6DA" stroke-width="2"/><circle cx="'+(x-r*.35)+'" cy="'+(y-r*.35)+'" r="'+(r*.22)+'" fill="#fff"/>').join("");
+  }
+  return"";
+}
+function normEq(){
+  if(!S.eq){S.eq={};if(S.equipped){const it=ITEMS.find(x=>x.id===S.equipped);if(it)S.eq[it.slot]=it.id}}
+  delete S.equipped;
+}
+function mochi(mood,eq,label){
+  eq=eq||{};
+  const faces={
+    sad:'<path d="M32 58 Q37 54 42 58 M58 58 Q63 54 68 58" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/><path d="M44 72 Q50 67 56 72" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/>',
+    ok:'<circle cx="37" cy="57" r="3.6" fill="var(--face)"/><circle cx="63" cy="57" r="3.6" fill="var(--face)"/><path d="M45 69 L55 69" '+F+' stroke-width="3" stroke-linecap="round"/>',
+    happy:'<path d="M31 59 Q37 51 43 59 M57 59 Q63 51 69 59" '+F+' stroke-width="3" fill="none" stroke-linecap="round"/><path d="M42 67 Q50 77 58 67 Z" fill="var(--face)"/><path d="M46 71 Q50 75 54 71" fill="#F07C98"/>'
+  };
+  const blush=mood==="sad"?.35:mood==="ok"?.6:1;
+  const on=Object.values(eq).map(id=>ITEMS.find(x=>x.id===id)).filter(Boolean);
+  const back=on.filter(i=>i.back).sort((a,b)=>a.slot==="b"?-1:1).map(i=>acc(i.id)).join("");
+  const front=["s","f","h"].map(sl=>on.filter(i=>!i.back&&i.slot===sl).map(i=>acc(i.id)).join("")).join("");
+  return '<svg viewBox="0 0 100 100" aria-label="'+(label||"麻糬")+'">'+back
+   +'<path d="M12 70 C8 40 28 20 50 20 C72 20 92 40 88 70 C86 86 70 90 50 90 C30 90 14 86 12 70Z" fill="var(--mochi)" '+F+' stroke-width="3"/>'
+   +'<ellipse cx="27" cy="66" rx="7" ry="4.5" fill="var(--cheek)" opacity="'+blush+'"/><ellipse cx="73" cy="66" rx="7" ry="4.5" fill="var(--cheek)" opacity="'+blush+'"/>'
+   +faces[mood]+front+'</svg>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  normEq();
+  document.getElementById("coinN").textContent=S.coins;
+  const now=new Date(),dow=(now.getDay()+6)%7,ws=weekStart(now);
+  const done=S.tasks.filter(isComplete).length,tot=S.tasks.length;
+  const mood=!tot||done===0?"sad":done<tot?"ok":"happy";
+  document.getElementById("pet").innerHTML=mochi(mood,S.eq);
+  document.getElementById("dayTxt").innerHTML="第 <b>"+(dow+1)+"</b> / 7 天 · 已完成 <b>"+done+"/"+tot+"</b>";
+  document.getElementById("segs").innerHTML=Array.from({length:7},(_,i)=>{
+    const k=keyOf(addDays(ws,i));return '<i class="'+(i===dow?(active(k)?"on":"now"):active(k)&&i<dow?"on":"")+'"></i>'}).join("");
+  const st=streak(),next=MILESTONES.find(m=>m>st)||st+100;
+  document.getElementById("streakTxt").textContent="連續活躍 "+st+" 天 · 下一里程碑 "+next+" 天";
+  document.getElementById("moodTxt").textContent=mood==="sad"?"麻糬有點無聊，完成一個任務陪陪它吧":mood==="ok"?"麻糬開始有精神了，繼續加油":"今天全部完成，麻糬超開心！";
+  const gi=document.getElementById("goal");if(document.activeElement!==gi)gi.value=S.goal||"";
+
+  // stats
+  const allM=S.tasks.reduce((a,t)=>a+totalMins(t),0);
+  const days=Object.keys(S.log).filter(active).length;
+  document.getElementById("stats").innerHTML='<div><b>'+(allM/60).toFixed(1)+'</b><span>累計小時</span></div><div><b>'+days+'</b><span>活躍天數</span></div><div><b>'+st+'</b><span>目前連續</span></div>';
+
+  // tasks
+  const list=document.getElementById("list");
+  const shown=S.tasks.filter(t=>filter==="all"||t.type===filter);
+  if(!shown.length){list.innerHTML='<div class="empty">'+(S.tasks.length?"這個分類還沒有任務":"還沒有任務，按「＋ 新增任務」開始養成麻糬")+'</div>'}
+  else list.innerHTML=shown.map(t=>{
+    const dn=doneOn(today(),t.id);
+    const full=isComplete(t),staged=isStaged(t),n=staged?progOf(t,today()):0;
+    const meta=(t.type==="daily"?'<span class="chip">每日</span>':'<span class="chip">每週</span><span>本週 '+weekCount(t)+'/'+(t.target||1)+' 天'+(full?" ✓":"")+'</span>')
+      +(staged?'<span>今天 '+esc(amountTxt(t,n))+'</span>':'');
+    const btn=staged
+      ?'<button class="ring" data-step="'+t.id+'" style="--p:'+(n/t.steps)+'" aria-label="完成一次：'+esc(t.name)+'"><span>'+(dn?"✓":n+"/"+t.steps)+'</span></button>'
+      :'<button class="chk" data-id="'+t.id+'" aria-label="'+(dn?"取消完成":"完成")+'：'+esc(t.name)+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+    const pips=staged?'<div class="pips" aria-hidden="true">'+Array.from({length:t.steps},(_,i)=>'<i class="'+(i<n?"on":"")+'"></i>').join("")+'</div>':'';
+    const right=manage
+      ?'<div class="tactions"><button class="edit" data-edit="'+t.id+'">編輯</button><button class="del'+(armedDel===t.id?" sure":"")+'" data-del="'+t.id+'">'+(armedDel===t.id?"確定刪除":"刪除")+'</button></div>'
+      :(staged&&n>0?'<button class="minus" data-minus="'+t.id+'" aria-label="少記一次：'+esc(t.name)+'">−1</button>':'');
+    return '<div class="task'+(dn?" done":"")+'" style="--tc:var('+COLORS[t.color||0]+')">'
+      +btn
+      +'<div class="tinfo"><div class="tname">'+esc(t.name)+'</div>'+pips+'<div class="tmeta">'+meta+'<span>每次 '+t.mins+' 分 · 累計 '+fmtH(totalMins(t))+'</span>'+(t.ex?'<span class="chip">範例</span>':'')+'</div></div>'
+      +right
+      +'</div>'}).join("");
+  document.getElementById("manageBtn").textContent=manage?"完成":"管理任務";
+  document.getElementById("manageBtn").classList.toggle("on",manage);
+
+  // calendar
+  document.getElementById("calBody").hidden=!calOpen;
+  document.getElementById("calToggle").textContent=calOpen?"收起紀錄 ›":"查看每日紀錄 ›";
+  if(calOpen)renderCal();
+
+  // shop
+  const afford=ITEMS.filter(it=>!S.owned.includes(it.id)&&S.coins>=it.price).length;
+  document.getElementById("shopHint").textContent="已收集 "+S.owned.length+"/"+ITEMS.length+(afford?" · 有 "+afford+" 個買得起":"");
+  document.querySelectorAll("#shopTabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.s===shopSlot));
+  document.getElementById("shop").innerHTML=ITEMS.filter(it=>shopSlot==="all"||(shopSlot==="mine"?S.owned.includes(it.id):it.slot===shopSlot)).map(it=>{
+    const own=S.owned.includes(it.id),eq=S.eq[it.slot]===it.id;
+    const btn=own?'<button data-eq="'+it.id+'" class="'+(eq?"eq":"")+'">'+(eq?"穿戴中":"穿上")+'</button>'
+      :'<button data-buy="'+it.id+'" '+(S.coins<it.price?"disabled":"")+'>'+it.price+' 金幣購買</button>';
+    return '<div class="item'+(own?"":" locked")+'"><span class="slotTag">'+SLOTS[it.slot]+'</span><div class="mini">'+mochi("ok",{[it.slot]:it.id},it.name).replace('viewBox="0 0 100 100"','viewBox="-16 -18 132 120"')+'</div><div class="nm">'+it.name+'</div>'+btn+'</div>'}).join("")
+    ||'<div class="empty" style="grid-column:1/-1">還沒有道具，完成任務存金幣來買吧</div>';
+}
+function renderCal(){
+  const y=calMonth.getFullYear(),m=calMonth.getMonth();
+  document.getElementById("monTxt").textContent=y+" 年 "+(m+1)+" 月";
+  const first=new Date(y,m,1),lead=(first.getDay()+6)%7,dim=new Date(y,m+1,0).getDate(),tk=today();
+  const dailyN=Math.max(1,S.tasks.length);
+  let h=["一","二","三","四","五","六","日"].map(w=>'<div class="wd">'+w+'</div>').join("");
+  for(let i=0;i<lead;i++)h+='<div class="dd out" aria-hidden="true"></div>';
+  for(let d=1;d<=dim;d++){
+    const k=keyOf(new Date(y,m,d)),n=(S.log[k]||[]).length,r=n/dailyN;
+    const lv=n===0?"":r>=1?"l3":r>=.5?"l2":"l1";
+    h+='<button class="dd '+lv+(k===tk?" today":"")+(k===selDay?" sel":"")+'" data-day="'+k+'" aria-label="'+(m+1)+'月'+d+'日，完成 '+n+' 項">'+d+'</button>';
+  }
+  document.getElementById("calGrid").innerHTML=h;
+  const ids=S.log[selDay]||[],d=parseKey(selDay);
+  const names=ids.map(id=>{const t=S.tasks.find(x=>x.id===id);return t?esc(t.name)+"（"+(isStaged(t)?esc(amountTxt(t,t.steps)):t.mins+" 分")+"）":"已刪除的任務"});
+  const partial=Object.keys((S.prog||{})[selDay]||{}).filter(id=>!ids.includes(id)).map(id=>S.tasks.find(x=>x.id===id)).filter(t=>t&&isStaged(t));
+  partial.forEach(t=>names.push(esc(t.name)+"（進行中 "+esc(amountTxt(t,progOf(t,selDay)))+"）"));
+  document.getElementById("dayRec").innerHTML='<b>'+(d.getMonth()+1)+' 月 '+d.getDate()+' 日</b>　'+(names.length?"完成 "+ids.length+" 項"+(S.bonus[selDay]?" · 拿到全勤獎勵":"")+"<ul>"+names.map(n=>"<li>"+n+"</li>").join("")+"</ul>":"這天沒有紀錄");
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+/* ---------- events ---------- */
+document.getElementById("list").addEventListener("click",e=>{
+  const c=e.target.closest(".chk");if(c){toggle(c.dataset.id);return}
+  const r=e.target.closest("[data-step]");if(r){step(r.dataset.step,1);return}
+  const mi=e.target.closest("[data-minus]");if(mi){step(mi.dataset.minus,-1);return}
+  const ed=e.target.closest("[data-edit]");if(ed){openSheet(S.tasks.find(t=>t.id===ed.dataset.edit));return}
+  const d=e.target.closest(".del");if(d){
+    const id=d.dataset.del;
+    if(armedDel===id){S.tasks=S.tasks.filter(t=>t.id!==id);armedDel=null;save();toast("已刪除任務")}else armedDel=id;
+    render();
+  }
+});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{filter=b.dataset.f;document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-pressed",x===b));render()}));
+document.getElementById("manageBtn").onclick=()=>{manage=!manage;armedDel=null;render()};
+document.getElementById("goal").addEventListener("input",e=>{S.goal=e.target.value;save()});
+document.getElementById("calToggle").onclick=()=>{calOpen=!calOpen;render()};
+document.getElementById("prevM").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()-1,1);renderCal()};
+document.getElementById("nextM").onclick=()=>{calMonth=new Date(calMonth.getFullYear(),calMonth.getMonth()+1,1);renderCal()};
+document.getElementById("calGrid").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(b){selDay=b.dataset.day;renderCal()}});
+document.getElementById("shopTabs").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){shopSlot=b.dataset.s;render()}});
+document.getElementById("shop").addEventListener("click",e=>{
+  const b=e.target.closest("[data-buy]");
+  if(b){const it=ITEMS.find(x=>x.id===b.dataset.buy);if(S.coins>=it.price){S.coins-=it.price;S.owned.push(it.id);S.eq[it.slot]=it.id;toast("買到了「"+it.name+"」！");bounce();save();render()}return}
+  const q=e.target.closest("[data-eq]");
+  if(q){const it=ITEMS.find(x=>x.id===q.dataset.eq);if(S.eq[it.slot]===it.id)delete S.eq[it.slot];else S.eq[it.slot]=it.id;bounce();save();render()}
+});
+
+// add-task sheet
+const bg=document.getElementById("sheetBg");
+document.getElementById("fColors").innerHTML=COLORS.map((c,i)=>'<button type="button" style="--sw:var('+c+')" data-c="'+i+'" aria-label="顏色 '+(i+1)+'" aria-pressed="'+(i===0)+'"></button>').join("");
+document.getElementById("fColors").addEventListener("click",e=>{const b=e.target.closest("[data-c]");if(!b)return;sheetColor=+b.dataset.c;document.querySelectorAll("#fColors button").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+const $=id=>document.getElementById(id);
+function setType(t){sheetType=t;document.querySelectorAll("#typeSeg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.t===t));$("targetField").hidden=t!=="weekly"}
+function setMode(m){sheetMode=m;document.querySelectorAll("#modeSeg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.m===m));$("stepFields").hidden=m!=="steps"}
+function setColor(i){sheetColor=i;document.querySelectorAll("#fColors button").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.c===i))}
+document.querySelectorAll("#typeSeg button").forEach(b=>b.onclick=()=>setType(b.dataset.t));
+document.querySelectorAll("#modeSeg button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+function openSheet(t){
+  editingId=t?t.id:null;
+  $("sheetTitle").textContent=t?"編輯任務":"新增任務";
+  $("submitBtn").textContent=t?"儲存":"加入任務";
+  $("fName").value=t?t.name:"";
+  $("fMins").value=t?t.mins:20;
+  $("fTarget").value=t&&t.target?t.target:3;
+  $("fSteps").value=t&&t.steps?t.steps:5;
+  $("fUnit").value=t&&t.unit?t.unit:"";
+  setType(t?t.type:"daily");setMode(t&&isStaged(t)?"steps":"once");setColor(t?t.color||0:0);
+  bg.hidden=false;setTimeout(()=>$("fName").focus(),50);
+}
+document.getElementById("addBtn").onclick=()=>openSheet(null);
+document.getElementById("cancelBtn").onclick=()=>bg.hidden=true;
+bg.addEventListener("click",e=>{if(e.target===bg)bg.hidden=true});
+document.getElementById("sheet").addEventListener("submit",e=>{
+  e.preventDefault();
+  const name=document.getElementById("fName").value.trim();if(!name)return;
+  const mins=Math.max(1,Math.min(600,+document.getElementById("fMins").value||20));
+  const old=editingId?S.tasks.find(x=>x.id===editingId):null;
+  const t={id:old?old.id:uid(),name,type:sheetType,mins,color:sheetColor};
+  if(sheetType==="weekly")t.target=Math.max(1,Math.min(7,+$("fTarget").value||3));
+  if(sheetMode==="steps"){t.steps=Math.max(2,Math.min(20,Math.round(+$("fSteps").value)||5));const u=$("fUnit").value.trim();if(u)t.unit=u}
+  if(old){S.tasks[S.tasks.indexOf(old)]=t;toast("已更新「"+name+"」")}
+  else{S.tasks.push(t);toast("新增了「"+name+"」")}
+  editingId=null;save();bg.hidden=true;render();
+});
+
+render();
+</script>
+
+</body></html>
