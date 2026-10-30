@@ -201,6 +201,32 @@ h2{font-family:var(--display);font-size:18px;margin:0;font-weight:700}
 .edit{color:var(--ink)}
 .tactions{display:flex;gap:6px;flex:0 0 auto}
 [hidden]{display:none!important}
+/* button feedback: springy press, hover lift, pop + burst on completion, coin bump */
+button{transition:transform .18s cubic-bezier(.3,1.6,.5,1),box-shadow .18s,background-color .2s,color .2s,border-color .2s}
+@media (hover:hover){
+  .pill:hover,.tab:hover,.shopTabs button:hover,.themeBtn:hover,.edit:hover,.del:hover,.minus:hover,.calnav button:hover,.item button:not(:disabled):hover,.colors button:hover,.seg button:hover{transform:translateY(-2px)}
+  .pill.primary:hover{box-shadow:0 5px 0 rgba(0,0,0,.14)}
+  .chk:hover,.ring:hover{transform:scale(1.08)}
+  .dd:hover{transform:scale(1.12)}
+  .task:hover{border-color:var(--tc)}
+}
+button:active:not(:disabled){transform:scale(.92)}
+.pill.primary:active{box-shadow:0 0 0 rgba(0,0,0,0)}
+.task{transition:border-color .2s,background-color .3s}
+.task.pop .chk,.task.pop .ring{animation:popc .5s cubic-bezier(.3,1.7,.5,1)}
+@keyframes popc{0%{transform:scale(.55)}100%{transform:scale(1)}}
+.task.pop .chk svg path{stroke-dasharray:24;stroke-dashoffset:24;animation:draw .35s .12s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.task.pop .pips i.on:last-of-type{animation:popc .45s cubic-bezier(.3,1.7,.5,1)}
+.coins.bump{animation:bump .5s cubic-bezier(.3,1.7,.5,1)}
+.coins.bump .coin{animation:spin .5s ease}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes spin{to{transform:rotateY(360deg)}}
+.spark{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:40;animation:spark .6s ease-out forwards}
+@keyframes spark{from{transform:translate(-50%,-50%) scale(1);opacity:1}to{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(.3);opacity:0}}
+.item button.eq{animation:none}
+.item.justgot{animation:popc .5s cubic-bezier(.3,1.7,.5,1)}
+
 /* living mochi: breathes, blinks, mood-specific idle, reacts to taps */
 #pet .squish,#pet .eyes,#pet .held,#pet .floaty{transform-box:view-box}
 #pet .squish{transform-origin:50px 90px;animation:breathe 3.2s ease-in-out infinite}
@@ -340,7 +366,7 @@ let S=null;
 try{const raw=localStorage.getItem("mochi-state");if(raw)S=JSON.parse(raw)}catch(e){}
 if(!S||!S.tasks)S=defaults();
 
-let shopSlot="all",filter="all",manage=false,calOpen=false,calMonth=new Date(),selDay=keyOf(new Date()),sheetType="daily",sheetMode="once",sheetColor=0,armedDel=null,editingId=null;
+let popId=null,popItem=null,lastCoins=null,shopSlot="all",filter="all",manage=false,calOpen=false,calMonth=new Date(),selDay=keyOf(new Date()),sheetType="daily",sheetMode="once",sheetColor=0,armedDel=null,editingId=null;
 
 /* ---------- persistence: private db doc per person, with browser storage as backup ---------- */
 let dbRef=null,saveTimer=null;
@@ -425,7 +451,7 @@ function step(id,delta){
   const k=today(),n=progOf(t,k);
   if(delta>0){
     if(n>=t.steps){toast("今天已經全部完成囉");return}
-    setProg(k,id,n+1);
+    setProg(k,id,n+1);popId=id;
     if(n+1>=t.steps){complete(id,"「"+t.name+"」完成！")}
     else{toast("第 "+(n+1)+" 次 ✓ 還差 "+(t.steps-n-1)+" 次");bounce()}
   }else{
@@ -440,7 +466,7 @@ function toggle(id){
   save();render();
 }
 function complete(id,prefix){
-  const k=today();S.log[k]=S.log[k]||[];
+  const k=today();S.log[k]=S.log[k]||[];popId=id;
   {
     S.log[k].push(id);S.coins+=5;let msg=(prefix||"")+"+5 金幣";
     const all=S.tasks.length&&S.tasks.every(isComplete);
@@ -561,7 +587,7 @@ function render(){
     const right=manage
       ?'<div class="tactions"><button class="edit" data-edit="'+t.id+'">編輯</button><button class="del'+(armedDel===t.id?" sure":"")+'" data-del="'+t.id+'">'+(armedDel===t.id?"確定刪除":"刪除")+'</button></div>'
       :(staged&&n>0?'<button class="minus" data-minus="'+t.id+'" aria-label="少記一次：'+esc(t.name)+'">−1</button>':'');
-    return '<div class="task'+(dn?" done":"")+'" style="--tc:var('+COLORS[t.color||0]+')">'
+    return '<div class="task'+(dn?" done":"")+(t.id===popId?" pop":"")+'" style="--tc:var('+COLORS[t.color||0]+')">'
       +btn
       +'<div class="tinfo"><div class="tname">'+esc(t.name)+'</div>'+pips+'<div class="tmeta">'+meta+'<span>每次 '+t.mins+' 分 · 累計 '+fmtH(totalMins(t))+'</span>'+(t.ex?'<span class="chip">範例</span>':'')+'</div></div>'
       +right
@@ -582,8 +608,25 @@ function render(){
     const own=S.owned.includes(it.id),eq=S.eq[it.slot]===it.id;
     const btn=own?'<button data-eq="'+it.id+'" class="'+(eq?"eq":"")+'">'+(eq?"穿戴中":"穿上")+'</button>'
       :'<button data-buy="'+it.id+'" '+(S.coins<it.price?"disabled":"")+'>'+it.price+' 金幣購買</button>';
-    return '<div class="item'+(own?"":" locked")+'"><span class="slotTag">'+SLOTS[it.slot]+'</span><div class="mini">'+mochi("ok",{[it.slot]:it.id},it.name).replace('viewBox="0 0 100 100"','viewBox="-16 -18 132 120"')+'</div><div class="nm">'+it.name+'</div>'+btn+'</div>'}).join("")
+    return '<div class="item'+(own?"":" locked")+(it.id===popItem?" justgot":"")+'"><span class="slotTag">'+SLOTS[it.slot]+'</span><div class="mini">'+mochi("ok",{[it.slot]:it.id},it.name).replace('viewBox="0 0 100 100"','viewBox="-16 -18 132 120"')+'</div><div class="nm">'+it.name+'</div>'+btn+'</div>'}).join("")
     ||'<div class="empty" style="grid-column:1/-1">還沒有道具，完成任務存金幣來買吧</div>';
+  const cEl=document.querySelector(".coins");
+  if(lastCoins!==null&&lastCoins!==S.coins){cEl.classList.remove("bump");void cEl.offsetWidth;cEl.classList.add("bump")}
+  lastCoins=S.coins;
+  if(popId){const t=S.tasks.find(x=>x.id===popId);const b=document.querySelector('[data-id="'+popId+'"],[data-step="'+popId+'"]');if(t&&b&&doneOn(today(),popId))burst(b,"var("+COLORS[t.color||0]+")")}
+  if(popItem){const b=document.querySelector('[data-eq="'+popItem+'"]');if(b)burst(b,"var(--butter)")}
+  popId=null;popItem=null;
+}
+function burst(el,color){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(let i=0;i<10;i++){
+    const d=document.createElement("span"),a=i/10*Math.PI*2,dist=26+Math.random()*16;
+    d.className="spark";d.style.left=cx+"px";d.style.top=cy+"px";
+    d.style.background=i%2?color:"var(--butter)";
+    d.style.setProperty("--x",Math.cos(a)*dist+"px");d.style.setProperty("--y",Math.sin(a)*dist+"px");
+    document.body.appendChild(d);setTimeout(()=>d.remove(),700);
+  }
 }
 function renderCal(){
   const y=calMonth.getFullYear(),m=calMonth.getMonth();
@@ -634,7 +677,7 @@ document.getElementById("calGrid").addEventListener("click",e=>{const b=e.target
 document.getElementById("shopTabs").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(b){shopSlot=b.dataset.s;render()}});
 document.getElementById("shop").addEventListener("click",e=>{
   const b=e.target.closest("[data-buy]");
-  if(b){const it=ITEMS.find(x=>x.id===b.dataset.buy);if(S.coins>=it.price){S.coins-=it.price;S.owned.push(it.id);S.eq[it.slot]=it.id;toast("買到了「"+it.name+"」！");bounce();save();render()}return}
+  if(b){const it=ITEMS.find(x=>x.id===b.dataset.buy);if(S.coins>=it.price){S.coins-=it.price;S.owned.push(it.id);S.eq[it.slot]=it.id;popItem=it.id;toast("買到了「"+it.name+"」！");bounce();save();render()}return}
   const q=e.target.closest("[data-eq]");
   if(q){const it=ITEMS.find(x=>x.id===q.dataset.eq);if(S.eq[it.slot]===it.id)delete S.eq[it.slot];else S.eq[it.slot]=it.id;bounce();save();render()}
 });
